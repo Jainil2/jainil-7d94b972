@@ -1,7 +1,14 @@
 import { useEffect, useState } from "react";
-import { Menu, X, Download } from "lucide-react";
+import { Menu, X, Download, TerminalSquare } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { useScrollSpy } from "@/hooks/use-scroll-spy";
+
+function openShell() {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(
+    new KeyboardEvent("keydown", { key: "j", metaKey: true }),
+  );
+}
 
 const links = [
   { href: "#about", label: "about" },
@@ -72,6 +79,17 @@ export function Nav() {
             </Link>
           </li>
           <li>
+            <button
+              type="button"
+              onClick={openShell}
+              title="Open shell (⌘J)"
+              className="inline-flex items-center gap-1.5 rounded-md px-3 py-2 font-mono text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-terminal"
+            >
+              <TerminalSquare className="size-3.5" />
+              shell
+            </button>
+          </li>
+          <li>
             <a
               href="/jainil-chauhan-resume.pdf"
               download
@@ -115,6 +133,19 @@ export function Nav() {
               >
                 lab
               </Link>
+            </li>
+            <li>
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  openShell();
+                }}
+                className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left font-mono text-sm text-muted-foreground hover:bg-secondary hover:text-terminal"
+              >
+                <TerminalSquare className="size-3.5" />
+                shell
+              </button>
             </li>
             <li>
               <a

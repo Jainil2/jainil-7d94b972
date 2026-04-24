@@ -108,7 +108,11 @@ export function Hero() {
             <kbd className="rounded border border-border bg-card/60 px-1.5 py-0.5 text-[10px] text-foreground">
               ⌘K
             </kbd>{" "}
-            or visit{" "}
+            ·{" "}
+            <kbd className="rounded border border-border bg-card/60 px-1.5 py-0.5 text-[10px] text-foreground">
+              ⌘J
+            </kbd>{" "}
+            shell · visit{" "}
             <Link to="/lab" className="text-terminal hover:underline">
               /lab
             </Link>
