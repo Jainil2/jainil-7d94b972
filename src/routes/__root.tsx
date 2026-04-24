@@ -3,6 +3,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { PortfolioHUD } from "@/components/portfolio/PortfolioHUD";
 import { TerminalShell } from "@/components/portfolio/TerminalShell";
 import { ChaosOverlay } from "@/components/portfolio/ChaosOverlay";
+import { MobileShellFab } from "@/components/portfolio/MobileShellFab";
 import { useWebVitals } from "@/lib/useWebVitals";
 import { useBuildStatus } from "@/lib/useBuildStatus";
 import { useHydrateControlPlane } from "@/lib/useControlPlane";
@@ -95,6 +96,7 @@ function RootComponent() {
       <Outlet />
       <PortfolioHUD />
       <TerminalShell />
+      <MobileShellFab />
       <ChaosOverlay />
     </>
   );

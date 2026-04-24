@@ -1,99 +1,75 @@
+# Pass 5 — Discoverable Terminal + Compact HUD Dock
 
+Two related problems to fix:
 
-# Pass 4 — Interactive System Design Lab + Portfolio HUD
+1. **Terminal is hidden.** `TerminalShell` is fully built and powerful (`help`, `ls`, `cat`, `goto`, `cd`, `open`, `kill`, `restore`, `tokens`, `env`, `ping`, `whoami`…), but it's only reachable via `⌘J` or a tiny icon buried inside the HUD. Most visitors will never know it exists.
+2. **HUD is bloated.** The 336px-wide HUD now stacks: env switcher, 3 metric cells, sparkline, 3 vitals cells, identity card, incidents list, 5 social/resume links, and a simulations toggle + shell button. It dominates the bottom-left and looks busy on smaller laptops.
 
-You already have three live simulations woven into the portfolio (Token Bucket in Contact, Consistent Hash Ring in Projects, LSM-Tree in Experience). This pass adds a dedicated **"Lab"** of playable system-design / DSA mini-games and a floating **Portfolio HUD** that ties it all together so it feels like a single, hand-crafted developer toolkit instead of a list of widgets.
+This pass fixes both with one cohesive change: turn the HUD into a **collapsible dock** with tabs, and surface the terminal as a **first-class entry point** in the nav and on mobile.
 
 ---
 
 ## What you'll get
 
-1. **/lab — System Design Playground** (new route)
-   A grid of small interactive demos. Each one is a 2-minute "play" that demonstrates a real concept and links back to where you used it in production.
+### 1. Terminal becomes discoverable
 
-2. **5 new playable mini-games** (in addition to the 3 you already have)
+- **Nav button** (desktop): a small `▸ shell` chip next to `lab`, with the `⌘J` shortcut shown on hover. Clicking opens the terminal.
+- **Mobile FAB** (bottom-right, only on `md:` and below): a circular terminal button so phone visitors — who don't have `⌘J` — can also open it.
+- **Hero hint upgrade**: the existing "try `⌘K` or visit `/lab`" line gets `⌘J` added so first-time visitors learn the shell exists.
+- **Terminal stays the same internally** — same commands, same UX, same `⌘J` toggle. Just more ways in.
 
-   | Game | Concept | Interaction |
-   |---|---|---|
-   | **Bloom Filter** | Probabilistic set membership | Type a word → 3 hash functions light up bit positions → see false-positive rate climb live |
-   | **LRU Cache** | Eviction policy | Click "keys" to access them; watch the doubly-linked list reorder and evict the tail when full |
-   | **Raft Leader Election** | Consensus | 5-node cluster; click a node to crash it, watch followers time out, vote, and elect a new leader with animated RPCs |
-   | **Sorting Race** | Algorithm comparison | Bubble vs Quick vs Merge running side-by-side on the same array, with bar-height animation and op-count |
-   | **Dijkstra Pathfinder** | Graph algorithms | Click cells on a grid to add walls, click Run, watch the frontier expand and the shortest path light up |
+### 2. HUD becomes a compact, professional dock
 
-3. **Portfolio HUD** (the "plugin")
-   A small floating panel (bottom-left, dismissible, persisted in `localStorage`) showing:
-   - Live "system stats": tokens/sec drained, healthy nodes, current section
-   - Mini résumé strip (role · location · years · primary stack)
-   - Quick links: resume, GitHub, LinkedIn, email, ⌘K
-   - Toggle to show/hide simulations globally (mirrors the command palette setting)
+Replace the always-expanded 336-wide panel with a **two-state dock** in the bottom-left:
 
-   Looks like a `htop` / status-bar widget — reinforces the "engineer built this" vibe without being noisy.
+- **Collapsed (default after first visit)**: a single ~160px pill showing the most useful at-a-glance signals — env badge, TPS, node health, and a chevron to expand. About a third the visual footprint of today's HUD.
+- **Expanded**: a 320px panel with **tabs** instead of one long stack. Three tabs:
+  - **`stats`** — env switcher, metric cells (tokens / tps / nodes), TPS sparkline, web-vitals (LCP / INP / CLS).
+  - **`me`** — identity card, primary stack line, social links (GitHub / LinkedIn / email / resume / lab).
+  - **`ops`** — simulations toggle, open-shell button, env switcher mirror, and any open incidents (so they're still surfaced but not always taking vertical space).
 
-4. **Lab entry points wired into the rest of the site**
-   - Nav gets a `lab` link
-   - Command palette gets a "Labs" group with each game indexed (`⌘K → "bloom"`)
-   - Each Skills card with a matching concept (Distributed Systems, DSA, Data) gets a small `▸ try it` chip linking into the relevant lab demo
-   - The hero adds a one-line "this site is interactive — try `⌘K` or visit `/lab`"
+  Incidents get a **red dot badge** on the collapsed pill when any are unacknowledged, so you don't lose the at-a-glance warning when collapsed.
 
-5. **Polish**
-   - Every new sim respects `prefers-reduced-motion` and the global Simulations toggle
-   - Each game has a tiny "What you're seeing" caption and a "Where I used this" link to the relevant project case-study
-   - Mobile-friendly: games collapse to single-column with simplified controls
-   - Per-game SEO: `/lab` and `/lab/$slug` get unique titles and descriptions for shareable deep-links
+- **Persistence**: collapsed/expanded state and active tab persisted in `localStorage` alongside the existing visibility pref.
+- **Hide-completely** behaviour from today's HUD is preserved (the small "hud" pill that re-shows it).
+- **Visual language stays consistent** with the rest of the site: same border, card bg, mono font, terminal-green accents — just better organized.
+
+### 3. Cohesion touches
+
+- Command palette (`⌘K`) gains an explicit **"Open Shell"** entry so the two surfaces cross-reference each other.
+- Mobile nav menu gets a **`▸ shell`** item too (currently mobile users had no way to open it at all).
 
 ---
 
-## File structure
+## Files
 
-```text
-src/
-  routes/
-    lab.tsx                          # /lab — grid of game cards
-    lab.$slug.tsx                    # /lab/bloom-filter, etc. — full-page game view
-  components/
-    system-design/
-      BloomFilter.tsx                # NEW — animated bit-array + hash fns
-      LRUCache.tsx                   # NEW — doubly linked list visual
-      RaftCluster.tsx                # NEW — 5-node election sim
-      SortingRace.tsx                # NEW — 3-way bar-chart race
-      DijkstraGrid.tsx               # NEW — clickable grid + frontier
-      GameCard.tsx                   # NEW — shared wrapper (title, caption, link)
-    portfolio/
-      PortfolioHUD.tsx               # NEW — the floating "plugin"
-      Nav.tsx                        # +lab link
-      CommandPalette.tsx             # +Labs group
-      Skills.tsx                     # +"try it" chips on relevant cards
-      Hero.tsx                       # +interactive hint line
-  lib/
-    labRegistry.ts                   # NEW — single source of truth: id, title, slug, blurb, component, related project
-    useHudPrefs.ts                   # NEW — localStorage-backed HUD visibility
-```
+| File | Change |
+|---|---|
+| `src/components/portfolio/Nav.tsx` | Add desktop `shell` button + mobile menu entry; both dispatch the existing `⌘J` event used today by the HUD's shell button. |
+| `src/components/portfolio/PortfolioHUD.tsx` | Rewrite layout to collapsed pill + expanded tabbed panel. Same data sources (`useControlPlane`, `useSimulationStore`, `useTokenRate`) — only the chrome changes. |
+| `src/components/portfolio/MobileShellFab.tsx` *(new)* | Small circular terminal FAB for `<md` viewports, bottom-right, dispatches `⌘J`. Mounted in `__root.tsx` next to the existing `TerminalShell` / HUD. |
+| `src/components/portfolio/Hero.tsx` | Update the interactive-hint line to mention `⌘J shell` alongside `⌘K` and `/lab`. |
+| `src/components/portfolio/CommandPalette.tsx` | Add an "Open Shell" command in the existing Settings/utility group. |
+| `src/lib/useHudPrefs.ts` | Extend to also persist `expanded: boolean` and `tab: "stats" \| "me" \| "ops"` (additive, backward-compatible read of the existing `visible` key). |
+| `src/routes/__root.tsx` | Mount `<MobileShellFab />` alongside the existing HUD/terminal. |
+
+No new dependencies. No backend changes. No route changes.
 
 ---
 
 ## Technical notes
 
-- **Lab registry** (`labRegistry.ts`) drives `/lab`, `/lab/$slug`, the command palette entries, and the Skills "try it" chips — one place to add a new game.
-- **Animations**: all new sims use Framer Motion (already a dep), pure SVG, no canvas, no extra libraries.
-- **State**: each game owns its local state; only the global Simulations toggle reads from `useSimulationStore`. No new Zustand slices needed.
-- **Performance**: heaviest sims (Raft, Sorting Race) gate their RAF loops behind `IntersectionObserver` so off-screen demos don't burn CPU. HUD updates throttled to 4 Hz.
-- **Routing**: `/lab/$slug` does a static lookup in `labRegistry`; unknown slugs render the route's `notFoundComponent` with a link back to `/lab`.
-- **SEO**: each `/lab/$slug` defines its own `head()` (title, description, og:title, og:description) so individual games are shareable.
-- **Accessibility**: each game has keyboard controls (Tab to focus cells/nodes, Space to trigger), aria labels on all interactive SVG elements, and a "describe what's happening" live region for screen readers.
-- **HUD** mounts once in `__root.tsx` (or stays in the index route if you prefer it portfolio-only — I'll default to root so it persists into `/lab`).
+- The existing pattern `window.dispatchEvent(new KeyboardEvent("keydown", { key: "j", metaKey: true }))` (already used by the HUD's shell button and listened for by `TerminalShell`) is reused everywhere — no new prop drilling, no new global store.
+- Tabs are a simple local `useState` inside `PortfolioHUD`, persisted via `useHudPrefs`. No `Tabs` UI primitive needed; styled buttons match the existing terminal aesthetic and stay lighter than pulling shadcn `Tabs`.
+- Mobile FAB only renders on `<md` (the HUD is already desktop-only via `hidden md:block`), so the two never overlap.
+- Reduced-motion: collapsed↔expanded transition uses the same `transition-all` pattern already in the codebase; no new motion variants.
+- Accessibility: dock pill has `aria-expanded`, tabs use `role="tab"` / `aria-selected`, FAB has `aria-label="Open shell"`, and the nav `shell` button advertises the `⌘J` shortcut via `title`.
 
 ---
 
-## Out of scope (saving for a later pass, ask if you want any moved in)
+## Out of scope (ask if you want any pulled in)
 
-- Multiplayer / WebSocket-driven sims
-- Saving game state to the backend
-- A "leaderboard" for the Sorting Race
-- Audio / sound effects
-- A theme switcher (matrix-green / amber CRT / solarized)
-
----
-
-Approve and I'll build it in one pass: registry + 5 games + `/lab` routes + HUD + nav/palette/skills wiring + per-game SEO.
-
+- Drag-to-reposition the dock
+- Multiple dock positions (top-right, etc.)
+- Full keyboard navigation through the tabs (Tab/Arrow keys) — current tab buttons remain mouse/Enter accessible via normal focus order
+- A separate "always-visible mini terminal" embedded in the page (vs the modal) — the modal stays; we only make it easier to open
