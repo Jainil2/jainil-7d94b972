@@ -14,6 +14,7 @@ import {
   ChevronUp,
   ChevronDown,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useSimulationStore } from "@/lib/useSimulationStore";
 import { useHudPrefs, type HudTab } from "@/lib/useHudPrefs";
 import { useControlPlane, type EnvMode } from "@/lib/useControlPlane";
@@ -58,100 +59,121 @@ export function PortfolioHUD() {
   const openIncidents = incidents.filter((i) => !i.ack);
   const nodesOk = activeNodes.length === 3;
 
-  // ── Collapsed pill ──────────────────────────────────────────────────────
-  if (!expanded) {
-    return (
-      <div className="fixed bottom-5 left-5 z-40 hidden md:block">
-        <button
-          type="button"
-          onClick={() => setExpanded(true)}
-          aria-expanded="false"
-          aria-label="Expand HUD dock"
-          className="group flex items-center gap-2.5 rounded-full border border-border bg-card/90 px-3 py-1.5 font-mono text-[11px] shadow-lg backdrop-blur-md transition-colors hover:border-terminal/40"
-        >
-          <span className="relative flex items-center gap-1.5">
-            <span className="size-1.5 animate-pulse rounded-full bg-terminal" />
-            <span className="text-terminal">{env}</span>
-            {openIncidents.length > 0 && (
-              <span
-                aria-label={`${openIncidents.length} open incidents`}
-                className="absolute -right-2 -top-2 size-2 rounded-full bg-destructive"
-              />
-            )}
-          </span>
-          <span className="text-muted-foreground/60">·</span>
-          <span className="text-cyan-accent">{tps.toFixed(1)}</span>
-          <span className="text-muted-foreground">tps</span>
-          <span className="text-muted-foreground/60">·</span>
-          <span className={nodesOk ? "text-terminal" : "text-destructive"}>
-            {activeNodes.length}/3
-          </span>
-          <ChevronUp className="size-3 text-muted-foreground transition-transform group-hover:-translate-y-0.5" />
-        </button>
-      </div>
-    );
-  }
-
-  // ── Expanded tabbed dock ────────────────────────────────────────────────
+  // ── HUD Shell ────────────────────────────────────────────────
   return (
-    <aside
-      role="complementary"
-      aria-label="Portfolio HUD"
-      className="fixed bottom-5 left-5 z-40 hidden w-[320px] rounded-lg border border-border bg-card/90 shadow-xl backdrop-blur-md md:block"
-    >
-      <header className="flex items-center justify-between border-b border-border px-3 py-2">
-        <div className="flex items-center gap-2 font-mono text-xs">
-          <span className="size-1.5 animate-pulse rounded-full bg-terminal" />
-          <span className="text-terminal">jc-hud</span>
-          <span className="text-muted-foreground/60">
-            · <span className="text-cyan-accent">{shortSha(status.commit)}</span>
-          </span>
-        </div>
-        <div className="flex items-center gap-1">
+    <AnimatePresence mode="wait">
+      {!expanded ? (
+        <motion.div 
+          key="collapsed"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.9 }}
+          transition={{ type: "spring", stiffness: 300, damping: 25 }}
+          className="fixed bottom-5 left-5 z-40 hidden md:block"
+        >
           <button
-            onClick={() => setExpanded(false)}
-            aria-label="Collapse HUD"
-            className="rounded p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"
+            type="button"
+            onClick={() => setExpanded(true)}
+            aria-expanded="false"
+            aria-label="Expand HUD dock"
+            className="group flex items-center gap-2.5 rounded-full border border-border bg-card/90 px-3 py-1.5 font-mono text-[11px] shadow-lg backdrop-blur-md transition-all hover:border-terminal/40 hover:shadow-[0_0_15px_rgba(20,184,166,0.15)]"
           >
-            <ChevronDown className="size-3.5" />
+            <span className="relative flex items-center gap-1.5">
+              <span className="size-1.5 animate-pulse rounded-full bg-terminal" />
+              <span className="text-terminal">{env}</span>
+              {openIncidents.length > 0 && (
+                <span
+                  aria-label={`${openIncidents.length} open incidents`}
+                  className="absolute -right-2 -top-2 size-2 rounded-full bg-destructive"
+                />
+              )}
+            </span>
+            <span className="text-muted-foreground/60">·</span>
+            <span className="text-cyan-accent">{tps.toFixed(1)}</span>
+            <span className="text-muted-foreground">tps</span>
+            <span className="text-muted-foreground/60">·</span>
+            <span className={nodesOk ? "text-terminal" : "text-destructive"}>
+              {activeNodes.length}/3
+            </span>
+            <ChevronUp className="size-3 text-muted-foreground transition-transform group-hover:-translate-y-0.5" />
           </button>
-          <button
-            onClick={() => setVisible(false)}
-            aria-label="Hide HUD"
-            className="rounded p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"
-          >
-            <X className="size-3.5" />
-          </button>
-        </div>
-      </header>
+        </motion.div>
+      ) : (
+        <motion.aside
+          key="expanded"
+          initial={{ opacity: 0, scale: 0.95, y: 10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 10 }}
+          transition={{ type: "spring", stiffness: 300, damping: 25 }}
+          role="complementary"
+          aria-label="Portfolio HUD"
+          className="fixed bottom-5 left-5 z-40 hidden w-[320px] rounded-lg border border-border bg-card/90 shadow-xl backdrop-blur-md md:block"
+        >
+          <header className="flex items-center justify-between border-b border-border px-3 py-2">
+            <div className="flex items-center gap-2 font-mono text-xs">
+              <span className="size-1.5 animate-pulse rounded-full bg-terminal" />
+              <span className="text-terminal">jc-hud</span>
+              <span className="text-muted-foreground/60">
+                · <span className="text-cyan-accent">{shortSha(status.commit)}</span>
+              </span>
+            </div>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setExpanded(false)}
+                aria-label="Collapse HUD"
+                className="rounded p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"
+              >
+                <ChevronDown className="size-3.5" />
+              </button>
+              <button
+                onClick={() => setVisible(false)}
+                aria-label="Hide HUD"
+                className="rounded p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"
+              >
+                <X className="size-3.5" />
+              </button>
+            </div>
+          </header>
 
-      <TabBar value={tab} onChange={setTab} incidents={openIncidents.length} />
+          <TabBar value={tab} onChange={setTab} incidents={openIncidents.length} />
 
-      <div className="p-3">
-        {tab === "stats" && (
-          <StatsTab
-            env={env}
-            setEnv={setEnv}
-            tokenCount={tokenCount}
-            tps={tps}
-            activeNodes={activeNodes.length}
-            tpsHistory={tpsHistory}
-            vitals={vitals}
-          />
-        )}
-        {tab === "me" && <MeTab bundleKb={status.bundleKb} />}
-        {tab === "ops" && (
-          <OpsTab
-            simulationsEnabled={simulationsEnabled}
-            setSimulationsEnabled={setSimulationsEnabled}
-            env={env}
-            setEnv={setEnv}
-            incidents={openIncidents}
-            onAck={ackIncident}
-          />
-        )}
-      </div>
-    </aside>
+          <div className="p-3">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={tab}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                transition={{ duration: 0.15 }}
+              >
+                {tab === "stats" && (
+                  <StatsTab
+                    env={env}
+                    setEnv={setEnv}
+                    tokenCount={tokenCount}
+                    tps={tps}
+                    activeNodes={activeNodes.length}
+                    tpsHistory={tpsHistory}
+                    vitals={vitals}
+                  />
+                )}
+                {tab === "me" && <MeTab bundleKb={status.bundleKb} />}
+                {tab === "ops" && (
+                  <OpsTab
+                    simulationsEnabled={simulationsEnabled}
+                    setSimulationsEnabled={setSimulationsEnabled}
+                    env={env}
+                    setEnv={setEnv}
+                    incidents={openIncidents}
+                    onAck={ackIncident}
+                  />
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </motion.aside>
+      )}
+    </AnimatePresence>
   );
 }
 

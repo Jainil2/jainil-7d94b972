@@ -27,6 +27,8 @@ const HELP_LINES = [
   "  open <lab-slug>         open a /lab demo",
   "  whoami                  identity",
   "  ping <target>           synthetic latency probe",
+  "  curl <url>              synthetic HTTP request",
+  "  dig <domain>            synthetic DNS lookup",
   "  env [prod|staging|chaos]  read or switch the env",
   "  kill node-<n>           crash a simulated node",
   "  restore node-<n>        restore a simulated node",
@@ -100,6 +102,8 @@ export function TerminalShell() {
       "open",
       "whoami",
       "ping",
+      "curl",
+      "dig",
       "env",
       "kill",
       "restore",
@@ -293,6 +297,42 @@ export function TerminalShell() {
                 ? "— for real pings, use the contact form or mailto."
                 : "— synthetic response (the shell doesn't actually send packets)",
           },
+        ]);
+        break;
+      }
+
+      case "curl": {
+        const url = rest[0] ?? "https://api.jainilchauhan.com/metrics";
+        const rps = (1200 + Math.random() * 500).toFixed(0);
+        const mem = (240 + Math.random() * 20).toFixed(1);
+        out([
+          { kind: "out", text: `HTTP/2 200 OK` },
+          { kind: "out", text: `content-type: application/json` },
+          { kind: "out", text: `{` },
+          { kind: "out", text: `  "status": "healthy",` },
+          { kind: "out", text: `  "rps": ${rps},` },
+          { kind: "out", text: `  "memory_mb": ${mem},` },
+          { kind: "out", text: `  "cache_hit_rate": "98.4%"` },
+          { kind: "out", text: `}` }
+        ]);
+        break;
+      }
+
+      case "dig": {
+        const domain = rest[0] ?? "jainilchauhan.com";
+        out([
+          { kind: "out", text: `; <<>> DiG 9.10.6 <<>> ${domain}` },
+          { kind: "out", text: `;; global options: +cmd` },
+          { kind: "out", text: `;; Got answer:` },
+          { kind: "out", text: `;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: ${Math.floor(Math.random() * 65000)}` },
+          { kind: "out", text: `;; flags: qr rd ra; QUERY: 1, ANSWER: 4, AUTHORITY: 0, ADDITIONAL: 1` },
+          { kind: "out", text: `` },
+          { kind: "out", text: `;; ANSWER SECTION:` },
+          { kind: "out", text: `${domain}.		300	IN	A	104.21.34.12` },
+          { kind: "out", text: `${domain}.		300	IN	A	172.67.14.8` },
+          { kind: "out", text: `` },
+          { kind: "out", text: `;; Query time: ${Math.floor(Math.random() * 30 + 10)} msec` },
+          { kind: "out", text: `;; SERVER: 1.1.1.1#53(1.1.1.1)` }
         ]);
         break;
       }

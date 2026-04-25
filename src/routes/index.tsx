@@ -13,6 +13,7 @@ import { Footer } from "@/components/portfolio/Footer";
 import { SectionDivider } from "@/components/portfolio/SectionDivider";
 import { CommandPalette } from "@/components/portfolio/CommandPalette";
 import { Now } from "@/components/portfolio/Now";
+import { InfrastructureMap } from "@/components/portfolio/InfrastructureMap";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -95,6 +96,9 @@ function Index() {
       <CommandPalette />
       <main>
         <Hero />
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 pt-16">
+          <InfrastructureMap />
+        </div>
         <SectionDivider label="about.md" />
         <About />
         <SectionDivider label="skills/" />

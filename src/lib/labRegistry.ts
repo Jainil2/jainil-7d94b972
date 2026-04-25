@@ -5,6 +5,8 @@ import { RaftCluster } from "@/components/system-design/RaftCluster";
 import { SortingRace } from "@/components/system-design/SortingRace";
 import { DijkstraGrid } from "@/components/system-design/DijkstraGrid";
 import { OIDCFlow } from "@/components/system-design/OIDCFlow";
+import { MessageQueue } from "@/components/system-design/MessageQueue";
+import { MerkleTree } from "@/components/system-design/MerkleTree";
 
 export interface LabEntry {
   slug: string;
@@ -82,6 +84,26 @@ export const labRegistry: LabEntry[] = [
     whereUsed: { label: "Auth stack at Tech Holding", href: "/#experience" },
     component: OIDCFlow,
     skillTags: ["Security", "System Design"],
+  },
+  {
+    slug: "message-queue",
+    title: "Distributed Message Queue",
+    category: "Distributed Systems",
+    blurb: "Kafka-style Pub/Sub with partitions and consumer lag.",
+    caption:
+      "Publish events to a topic. Messages are partitioned and processed asynchronously by a consumer group. Watch out for consumer lag if you publish too fast!",
+    component: MessageQueue,
+    skillTags: ["System Design", "Distributed Systems", "Kafka"],
+  },
+  {
+    slug: "merkle-tree",
+    title: "Merkle Tree",
+    category: "Data Structures",
+    blurb: "Data integrity via cryptographic hashes.",
+    caption:
+      "Mutate a data block (leaf node) to see its hash change. Watch how the invalidation bubbles up the tree, changing the Root Hash. Used in Git, Blockchain, and DynamoDB.",
+    component: MerkleTree,
+    skillTags: ["System Design", "Security"],
   },
 ];
 
