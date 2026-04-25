@@ -1,6 +1,7 @@
+import { useMemo, useState } from "react";
 import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
-import { ArrowLeft, Beaker, CheckCircle2 } from "lucide-react";
-import { labRegistry } from "@/lib/labRegistry";
+import { ArrowLeft, Beaker, CheckCircle2, Clock, Gauge } from "lucide-react";
+import { LAB_CATEGORIES, labRegistry, type LabCategory } from "@/lib/labRegistry";
 import { useLabProgress } from "@/lib/useLabProgress";
 
 export const Route = createFileRoute("/lab")({
@@ -10,28 +11,43 @@ export const Route = createFileRoute("/lab")({
       {
         name: "description",
         content:
-          "Playable mini-games demonstrating distributed systems, data structures, algorithms, and security — Bloom filters, Raft consensus, LRU cache, sorting algorithms, Dijkstra pathfinding, and the OAuth 2.0 / OIDC flow.",
+          "14 playable demos covering distributed systems, data structures, algorithms, and security — Bloom filters, Raft consensus, LRU cache, B-tree indexes, consistent hashing, rate limiters, CAP theorem, dining philosophers, OAuth/OIDC, and more. Each lab includes concept, complexity, reference code, and real-world usage.",
       },
       { property: "og:title", content: "Lab — Interactive System Design Demos" },
       {
         property: "og:description",
         content:
-          "Playable demos: Bloom Filter, LRU Cache, Raft Election, Sorting Race, Dijkstra Pathfinder, OAuth 2.0 / OIDC flow.",
+          "14 playable, in-depth demos for system design, DSA, distributed systems, and security.",
       },
     ],
   }),
   component: LabIndex,
 });
 
+const DIFF_COLOR: Record<string, string> = {
+  Beginner: "border-terminal/40 text-terminal",
+  Intermediate: "border-amber-500/40 text-amber-300",
+  Advanced: "border-fuchsia-500/40 text-fuchsia-300",
+};
+
 function LabIndex() {
   const { pathname } = useLocation();
   const { isCompleted, completed, hydrated, reset } = useLabProgress();
+  const [filter, setFilter] = useState<LabCategory | "All">("All");
 
   if (pathname !== "/lab") {
     return <Outlet />;
   }
 
   const completedCount = hydrated ? completed.size : 0;
+
+  const grouped = useMemo(() => {
+    const list = filter === "All" ? labRegistry : labRegistry.filter((l) => l.category === filter);
+    if (filter !== "All") return [{ category: filter, labs: list }];
+    return LAB_CATEGORIES
+      .map((cat) => ({ category: cat, labs: list.filter((l) => l.category === cat) }))
+      .filter((g) => g.labs.length > 0);
+  }, [filter]);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -72,43 +88,86 @@ function LabIndex() {
         </div>
 
         <p className="mt-3 max-w-2xl text-muted-foreground">
-          Interactive demos of the system design, DSA, and security concepts I work with daily. Each
-          one is a two-minute play — click around and break things.
+          {labRegistry.length} interactive demos of the system design, DSA, security, and
+          distributed-systems concepts I work with daily. Each lab is a 2–6 minute play with
+          concept explainer, complexity table, reference implementation, and real-world usage.
         </p>
 
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {labRegistry.map((lab) => {
-            const done = hydrated && isCompleted(lab.slug);
+        {/* Category filter */}
+        <div className="mt-6 flex flex-wrap items-center gap-2 font-mono text-xs">
+          <span className="text-muted-foreground">filter:</span>
+          {(["All", ...LAB_CATEGORIES] as const).map((cat) => {
+            const active = filter === cat;
+            const count = cat === "All" ? labRegistry.length : labRegistry.filter((l) => l.category === cat).length;
             return (
-              <Link
-                key={lab.slug}
-                to="/lab/$slug"
-                params={{ slug: lab.slug }}
-                className={`group relative rounded-lg border p-5 transition-all ${
-                  done
-                    ? "border-terminal/40 bg-terminal/5 hover:border-terminal/70"
-                    : "border-border bg-card/60 hover:border-terminal/50 hover:glow-terminal"
+              <button
+                key={cat}
+                onClick={() => setFilter(cat)}
+                className={`rounded-full border px-3 py-1 transition-colors ${
+                  active
+                    ? "border-terminal bg-terminal/10 text-terminal"
+                    : "border-border text-muted-foreground hover:border-terminal/40 hover:text-foreground"
                 }`}
               >
-                {done && (
-                  <CheckCircle2
-                    className="absolute right-3 top-3 size-4 text-terminal"
-                    aria-label="completed"
-                  />
-                )}
-                <p className="font-mono text-[10px] uppercase tracking-wider text-cyan-accent">
-                  {lab.category}
-                </p>
-                <h2 className="mt-2 font-mono text-lg font-semibold text-foreground group-hover:text-terminal">
-                  {lab.title}
-                </h2>
-                <p className="mt-2 text-sm text-muted-foreground">{lab.blurb}</p>
-                <p className="mt-4 font-mono text-xs text-terminal/80 group-hover:text-terminal">
-                  {done ? "✓ replay →" : "▸ try it →"}
-                </p>
-              </Link>
+                {cat} <span className="opacity-60">({count})</span>
+              </button>
             );
           })}
+        </div>
+
+        <div className="mt-8 space-y-10">
+          {grouped.map((group) => (
+            <section key={group.category}>
+              {filter === "All" && (
+                <h2 className="mb-4 font-mono text-xs uppercase tracking-widest text-cyan-accent">
+                  // {group.category}
+                </h2>
+              )}
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {group.labs.map((lab) => {
+                  const done = hydrated && isCompleted(lab.slug);
+                  return (
+                    <Link
+                      key={lab.slug}
+                      to="/lab/$slug"
+                      params={{ slug: lab.slug }}
+                      className={`group relative flex flex-col rounded-lg border p-5 transition-all ${
+                        done
+                          ? "border-terminal/40 bg-terminal/5 hover:border-terminal/70"
+                          : "border-border bg-card/60 hover:border-terminal/50 hover:glow-terminal"
+                      }`}
+                    >
+                      {done && (
+                        <CheckCircle2
+                          className="absolute right-3 top-3 size-4 text-terminal"
+                          aria-label="completed"
+                        />
+                      )}
+                      <p className="font-mono text-[10px] uppercase tracking-wider text-cyan-accent">
+                        {lab.category}
+                      </p>
+                      <h3 className="mt-2 font-mono text-lg font-semibold text-foreground group-hover:text-terminal">
+                        {lab.title}
+                      </h3>
+                      <p className="mt-2 flex-1 text-sm text-muted-foreground">{lab.blurb}</p>
+                      <div className="mt-4 flex flex-wrap items-center gap-2 font-mono text-[10px]">
+                        <span className={`rounded border px-1.5 py-0.5 ${DIFF_COLOR[lab.difficulty]}`}>
+                          <Gauge className="mr-1 inline size-3" />
+                          {lab.difficulty}
+                        </span>
+                        <span className="rounded border border-border px-1.5 py-0.5 text-muted-foreground">
+                          <Clock className="mr-1 inline size-3" />~{lab.readingTimeMin}min
+                        </span>
+                        <span className="ml-auto text-terminal/80 group-hover:text-terminal">
+                          {done ? "✓ replay →" : "▸ try it →"}
+                        </span>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </section>
+          ))}
         </div>
       </div>
     </div>
