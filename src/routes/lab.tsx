@@ -11,13 +11,13 @@ export const Route = createFileRoute("/lab")({
       {
         name: "description",
         content:
-          "14 playable demos covering distributed systems, data structures, algorithms, and security — Bloom filters, Raft consensus, LRU cache, B-tree indexes, consistent hashing, rate limiters, CAP theorem, dining philosophers, OAuth/OIDC, and more. Each lab includes concept, complexity, reference code, and real-world usage.",
+          "Interactive demos covering distributed systems, data structures, algorithms, and security — Bloom filters, Raft consensus, LRU cache, B-tree indexes, load balancing, circuit breakers, CRDTs, OAuth/OIDC, and more.",
       },
       { property: "og:title", content: "Lab — Interactive System Design Demos" },
       {
         property: "og:description",
         content:
-          "14 playable, in-depth demos for system design, DSA, distributed systems, and security.",
+          "Playable, in-depth demos for system design, DSA, distributed systems, and security.",
       },
     ],
   }),
@@ -35,19 +35,20 @@ function LabIndex() {
   const { isCompleted, completed, hydrated, reset } = useLabProgress();
   const [filter, setFilter] = useState<LabCategory | "All">("All");
 
-  if (pathname !== "/lab") {
-    return <Outlet />;
-  }
-
   const completedCount = hydrated ? completed.size : 0;
 
   const grouped = useMemo(() => {
     const list = filter === "All" ? labRegistry : labRegistry.filter((l) => l.category === filter);
     if (filter !== "All") return [{ category: filter, labs: list }];
-    return LAB_CATEGORIES
-      .map((cat) => ({ category: cat, labs: list.filter((l) => l.category === cat) }))
-      .filter((g) => g.labs.length > 0);
+    return LAB_CATEGORIES.map((cat) => ({
+      category: cat,
+      labs: list.filter((l) => l.category === cat),
+    })).filter((g) => g.labs.length > 0);
   }, [filter]);
+
+  if (pathname !== "/lab") {
+    return <Outlet />;
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -89,8 +90,8 @@ function LabIndex() {
 
         <p className="mt-3 max-w-2xl text-muted-foreground">
           {labRegistry.length} interactive demos of the system design, DSA, security, and
-          distributed-systems concepts I work with daily. Each lab is a 2–6 minute play with
-          concept explainer, complexity table, reference implementation, and real-world usage.
+          distributed-systems concepts I work with daily. Each lab is a 2–6 minute play with concept
+          explainer, complexity table, reference implementation, and real-world usage.
         </p>
 
         {/* Category filter */}
@@ -98,7 +99,10 @@ function LabIndex() {
           <span className="text-muted-foreground">filter:</span>
           {(["All", ...LAB_CATEGORIES] as const).map((cat) => {
             const active = filter === cat;
-            const count = cat === "All" ? labRegistry.length : labRegistry.filter((l) => l.category === cat).length;
+            const count =
+              cat === "All"
+                ? labRegistry.length
+                : labRegistry.filter((l) => l.category === cat).length;
             return (
               <button
                 key={cat}
@@ -151,7 +155,9 @@ function LabIndex() {
                       </h3>
                       <p className="mt-2 flex-1 text-sm text-muted-foreground">{lab.blurb}</p>
                       <div className="mt-4 flex flex-wrap items-center gap-2 font-mono text-[10px]">
-                        <span className={`rounded border px-1.5 py-0.5 ${DIFF_COLOR[lab.difficulty]}`}>
+                        <span
+                          className={`rounded border px-1.5 py-0.5 ${DIFF_COLOR[lab.difficulty]}`}
+                        >
                           <Gauge className="mr-1 inline size-3" />
                           {lab.difficulty}
                         </span>
